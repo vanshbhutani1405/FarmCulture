@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { getCropRecommendation } from "../services/api";
 import { Spinner } from "react-bootstrap";
-import { useNavigate } from "react-router-dom"; // ✅ Added
+import { useNavigate } from "react-router-dom";
+
+// Firebase
+import { db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 function FormPage() {
   const [formData, setFormData] = useState({
@@ -15,9 +18,8 @@ function FormPage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // ✅ Added
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,27 +29,34 @@ function FormPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setResult(null);
 
     try {
-      // Convert all values to numbers before sending
+      // Convert input values to numbers
       const formattedData = Object.fromEntries(
         Object.entries(formData).map(([key, value]) => [key, Number(value)])
       );
 
-      const res = await getCropRecommendation(formattedData);
+      // ✅ Save directly to Firestore
+      const userId = sessionStorage.getItem("uid") || "guest";
+      await addDoc(collection(db, "cropRecommendations"), {
+        userId,
+        input: formattedData,
+        recommendedCrop: null, // No prediction yet
+        createdAt: serverTimestamp(),
+      });
 
-      if (res?.recommended_crop) {
-        setResult(res.recommended_crop);
+      console.log("✅ Form data stored in Firestore");
 
-        // ✅ Navigate to Result Page with data
-        navigate("/result", { state: res });
-      } else {
-        setError("No crop recommendation received. Try again!");
-      }
+      // Navigate to result page (optional, for now we skip)
+      navigate("/result", {
+        state: {
+          input: formattedData,
+          recommendedCrop: null,
+        },
+      });
     } catch (err) {
-      console.error(err);
-      setError("Server error! Please try again later.");
+      console.error("🔥 Firestore save error:", err);
+      setError("Error saving data. Try again.");
     }
 
     setLoading(false);
@@ -70,7 +79,7 @@ function FormPage() {
             🌿 Soil & Weather Details
           </h2>
           <p className="text-center text-muted mb-4">
-            Enter accurate field parameters to get the best crop recommendation
+            Enter your field data — it will be saved to your account
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -88,7 +97,6 @@ function FormPage() {
                   <div className="form-floating">
                     <input
                       type="number"
-                      step="0.01"
                       className="form-control border-success shadow-sm"
                       name={field.name}
                       placeholder={field.label}
@@ -106,25 +114,19 @@ function FormPage() {
               <button
                 type="submit"
                 className="btn btn-success px-5 py-2 fw-semibold shadow-sm"
-                style={{ borderRadius: "10px", transition: "0.3s" }}
+                style={{ borderRadius: "10px" }}
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <Spinner size="sm" animation="border" className="me-2" /> Processing...
+                    <Spinner size="sm" animation="border" className="me-2" /> Saving...
                   </>
                 ) : (
-                  "Get Crop Recommendation"
+                  "Save Data"
                 )}
               </button>
             </div>
           </form>
-
-          {result && (
-            <div className="alert alert-success text-center mt-4 shadow-sm rounded-3">
-              🌱 <strong>Recommended Crop:</strong> {result}
-            </div>
-          )}
 
           {error && (
             <div className="alert alert-danger text-center mt-4 shadow-sm rounded-3">

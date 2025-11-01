@@ -12,7 +12,7 @@ import FormPage from "./pages/FormPage";
 // import Login from "./auth/login";
 import ResultPage from "./pages/ResultPage";
 import Login from "./auth/login";
-import Register from "./auth/rergister";
+import Register from "./auth/register";
 
 
 const App = () => {

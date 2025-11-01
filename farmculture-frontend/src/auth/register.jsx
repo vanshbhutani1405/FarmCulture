@@ -1,23 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-
-// Firebase
-import { auth, db } from "../firebase"; // adjust path if needed
+import { auth, db } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
-  getDoc,
-} from "firebase/firestore";
-
-// import logo from "../assets/logo.png";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const Register = () => {
   const nav = useNavigate();
@@ -27,52 +18,52 @@ const Register = () => {
     password: "",
     confirm: "",
   });
-  const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const createUserDoc = async (uid, payload) => {
-    await setDoc(doc(db, "users", uid), {
-      name: payload.name || "",
-      email: payload.email || "",
-      createdAt: serverTimestamp(),
-    });
+    try {
+      await setDoc(doc(db, "users", uid), {
+        name: payload.name || "",
+        email: payload.email || "",
+        createdAt: serverTimestamp(),
+      });
+      console.log("✅ User saved to Firestore");
+    } catch (error) {
+      console.error("🔥 Firestore Error:", error.message);
+      toast.error("Failed to save user to database: " + error.message);
+    }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return toast.error("Please enter your name");
     if (form.password !== form.confirm) {
       return toast.error("Passwords do not match");
     }
+
     try {
       setBusy(true);
-      const cred = await createUserWithEmailAndPassword(
-        auth,
-        form.email.trim(),
-        form.password
-      );
+      const { email, password, name } = form;
 
-      // set displayName
-      await updateProfile(cred.user, { displayName: form.name.trim() });
+      // ✅ Auth
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
 
-      // save to Firestore
-      await createUserDoc(cred.user.uid, {
-        name: form.name.trim(),
-        email: form.email.trim(),
-      });
+      // ✅ Firestore
+      await createUserDoc(cred.user.uid, { name, email });
 
-      // session
+      // ✅ Session Storage
       sessionStorage.setItem("isLogin", "true");
       sessionStorage.setItem("uid", cred.user.uid);
-      sessionStorage.setItem("email", form.email.trim());
-      sessionStorage.setItem("name", form.name.trim());
+      sessionStorage.setItem("email", email);
+      sessionStorage.setItem("name", name);
 
-      toast.success("Registered successfully!");
+      toast.success("Registration Successful!");
       nav("/home");
     } catch (err) {
-      toast.error(err.message || "Registration failed");
+      toast.error(err.message);
     } finally {
       setBusy(false);
     }
@@ -83,28 +74,21 @@ const Register = () => {
       setBusy(true);
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
-      const { uid, email, displayName } = cred.user;
 
-      // if user doc missing, create it
-      const userRef = doc(db, "users", uid);
-      const snap = await getDoc(userRef);
-      if (!snap.exists()) {
-        await setDoc(userRef, {
-          name: displayName || "",
-          email: email || "",
-          createdAt: serverTimestamp(),
-        });
-      }
+      await createUserDoc(cred.user.uid, {
+        name: cred.user.displayName,
+        email: cred.user.email,
+      });
 
       sessionStorage.setItem("isLogin", "true");
-      sessionStorage.setItem("uid", uid);
-      sessionStorage.setItem("email", email || "");
-      if (displayName) sessionStorage.setItem("name", displayName);
+      sessionStorage.setItem("uid", cred.user.uid);
+      sessionStorage.setItem("email", cred.user.email);
+      sessionStorage.setItem("name", cred.user.displayName);
 
       toast.success("Signed up with Google!");
       nav("/home");
     } catch (err) {
-      toast.error(err.message || "Google sign-up failed");
+      toast.error(err.message);
     } finally {
       setBusy(false);
     }
@@ -121,11 +105,9 @@ const Register = () => {
           style={{ maxWidth: 520 }}
         >
           <div className="card-body p-4 p-md-5">
-            {/* Header with logo + Login */}
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div className="d-flex align-items-center gap-2">
                 <span style={{ fontSize: 22 }}>🌿</span>
-                {/* <img src={logo} alt="logo" height={22} /> */}
                 <span className="fw-semibold" style={{ color: "#166534" }}>
                   FarmCulture
                 </span>
