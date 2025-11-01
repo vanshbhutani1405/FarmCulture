@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 // Firebase
 import { db } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getCropRecommendation } from "../services/api";
 
 function FormPage() {
   const [formData, setFormData] = useState({
@@ -25,42 +26,41 @@ function FormPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
 
-    try {
-      // Convert input values to numbers
-      const formattedData = Object.fromEntries(
-        Object.entries(formData).map(([key, value]) => [key, Number(value)])
-      );
 
-      // ✅ Save directly to Firestore
-      const userId = sessionStorage.getItem("uid") || "guest";
-      await addDoc(collection(db, "cropRecommendations"), {
-        userId,
-        input: formattedData,
-        recommendedCrop: null, // No prediction yet
-        createdAt: serverTimestamp(),
-      });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-      console.log("✅ Form data stored in Firestore");
+  try {
+    const formattedData = Object.fromEntries(
+      Object.entries(formData).map(([key, value]) => [key, Number(value)])
+    );
 
-      // Navigate to result page (optional, for now we skip)
-      navigate("/result", {
-        state: {
-          input: formattedData,
-          recommendedCrop: null,
-        },
-      });
-    } catch (err) {
-      console.error("🔥 Firestore save error:", err);
-      setError("Error saving data. Try again.");
-    }
+    // ✅ Call backend
+    const res = await getCropRecommendation(formattedData);
 
-    setLoading(false);
-  };
+    // ✅ Store in Firestore (optional)
+    const userId = sessionStorage.getItem("uid") || "guest";
+    await addDoc(collection(db, "cropRecommendations"), {
+      userId,
+      input: formattedData,
+      recommendedCrop: res.recommended_crop,
+      createdAt: serverTimestamp(),
+    });
+
+    // ✅ Navigate with backend data
+    navigate("/result", { state: res });
+
+  } catch (err) {
+    console.error("🔥 Error:", err);
+    setError("Server error. Please try again.");
+  }
+
+  setLoading(false);
+};
+
 
   return (
     <div

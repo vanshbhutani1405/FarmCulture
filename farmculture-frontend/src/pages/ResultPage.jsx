@@ -9,28 +9,39 @@ const ResultPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Crop data passed from FormPage → navigate("/result", { state: res })
-  const cropData = location.state || {
-    recommended_crop: "Wheat",
-    suitability_score: 94,
-    confidence: "High",
-    ai_summary:
-      "Optimal nitrogen levels make Wheat ideal for these conditions. The temperature and humidity fall within the favorable range for healthy growth. The balanced soil pH ensures nutrient absorption and strong root development. Rainfall conditions are perfect for steady yield without waterlogging, making Wheat a sustainable and profitable crop for your region.",
-  };
+  // ✅ Data passed from FormPage → navigate("/result", { state: res })
+  const cropData = location.state || {};
+
+  // ✅ If no data found, ask user to go back
+  if (!cropData.recommended_crop) {
+    return (
+      <div className="text-center mt-5">
+        <h4>No crop data found. Please submit the form first.</h4>
+        <button
+          onClick={() => navigate("/form")}
+          className="btn btn-success mt-3 px-4 py-2 fw-semibold shadow-sm"
+        >
+          Go to Form
+        </button>
+      </div>
+    );
+  }
 
   // ✅ Generate downloadable PDF report
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
-    doc.text("FarmCulture Crop Recommendation Report", 20, 20);
+    doc.text("FarmCulture - Crop Recommendation Report", 20, 20);
 
-    // doc.setFont("helvetica", "normal");
-    // doc.text(Recommended Crop: ${cropData.recommended_crop}, 20, 40);
-    // doc.text(Suitability: ${cropData.suitability_score}%, 20, 50);
-    // doc.text(Confidence: ${cropData.confidence}, 20, 60);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Recommended Crop: ${cropData.recommended_crop}`, 20, 40);
+    doc.text(`Suitability Score: ${cropData.suitability_score || "N/A"}%`, 20, 50);
+    doc.text(`Confidence Level: ${cropData.confidence || "N/A"}`, 20, 60);
 
-    doc.text("AI Summary:", 20, 80);
-    doc.text(cropData.ai_summary, 20, 90, { maxWidth: 170 });
+    doc.text("AI Farming Summary:", 20, 80);
+    doc.text(cropData.ai_summary || "No summary available", 20, 90, {
+      maxWidth: 170,
+    });
 
     doc.save("FarmCulture_Report.pdf");
   };
@@ -63,8 +74,8 @@ const ResultPage = () => {
               🌾 Recommended Crop: {cropData.recommended_crop}
             </h5>
             <p className="text-muted mt-2">
-              Suitability: {cropData.suitability_score}% | Confidence:{" "}
-              {cropData.confidence}
+              Suitability: {cropData.suitability_score || "N/A"}% | Confidence:{" "}
+              {cropData.confidence || "N/A"}
             </p>
 
             {/* Icons */}
@@ -121,7 +132,8 @@ const ResultPage = () => {
                 overflowY: "auto",
               }}
             >
-              {cropData.ai_summary}
+              {cropData.ai_summary ||
+                "No AI summary available for this crop recommendation."}
             </p>
           </div>
         </div>
@@ -136,8 +148,7 @@ const ResultPage = () => {
               transition: "0.3s",
             }}
           >
-            <i className="bi bi-file-earmark-arrow-down me-2"></i> Download
-            Report
+            <i className="bi bi-file-earmark-arrow-down me-2"></i> Download Report
           </button>
 
           <button

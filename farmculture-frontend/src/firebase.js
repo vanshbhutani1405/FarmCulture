@@ -1,6 +1,5 @@
 // src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -12,15 +11,12 @@ const firebaseConfig = {
   projectId: "farm-culture-739b9",
   storageBucket: "farmculture-project.appspot.com",
   messagingSenderId: "1010764566119",
-  appId: "1:123456789012:web:abcdef1234567890",
-  measurementId: "G-ABCDEFG1234"
+  appId: "1:1010764566119:web:7fa0d84488f2801ae5cec2",
+  measurementId: "G-KK9M6E5WRC"
 };
 
 // 🔥 Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// 📊 Initialize Analytics (optional, only if using in browser)
-const analytics = getAnalytics(app);
 
 // 🔐 Initialize Authentication
 export const auth = getAuth(app);
