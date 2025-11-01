@@ -11,6 +11,8 @@ import Home from "./pages/Home";
 import FormPage from "./pages/FormPage";
 // import Login from "./auth/login";
 import ResultPage from "./pages/ResultPage";
+import Login from "./auth/login";
+import Register from "./auth/rergister";
 
 
 const App = () => {
@@ -19,9 +21,9 @@ const App = () => {
       <Routes>
      <Route path="/" element={<Home/>}/>
       <Route path="/form" element={<FormPage/>}/>
-     {/* <Route path="/login" element={<Login/>} /> */}
+     <Route path="/login" element={<Login/>} />
       <Route path="/result" element={<ResultPage/>} />
-
+     <Route path="/register" element={<Register/>} />
       </Routes>
     </BrowserRouter>
   );

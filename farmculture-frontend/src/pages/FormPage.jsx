@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { getCropRecommendation } from "../services/api";
 import { Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom"; // ✅ Added
 
 function FormPage() {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ function FormPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // ✅ Added
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,6 +39,9 @@ function FormPage() {
 
       if (res?.recommended_crop) {
         setResult(res.recommended_crop);
+
+        // ✅ Navigate to Result Page with data
+        navigate("/result", { state: res });
       } else {
         setError("No crop recommendation received. Try again!");
       }
@@ -123,7 +128,7 @@ function FormPage() {
 
           {error && (
             <div className="alert alert-danger text-center mt-4 shadow-sm rounded-3">
-              ⚠️ {error}
+              ⚠ {error}
             </div>
           )}
         </div>

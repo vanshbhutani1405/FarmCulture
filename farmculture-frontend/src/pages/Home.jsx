@@ -48,12 +48,11 @@ const Home = () => {
               <Col xs={12} md={6}>
                 <div>
                   <h1 className="fw-bold display-5 text-dark mb-3">
-                    Get Your Crop <br className="d-none d-lg-block" />
-                    Recommendation
+                    Your Personalized Farm <br className="d-none d-lg-block" />
+                    Companion
                   </h1>
                   <p className="text-secondary fs-5 mb-4">
-                    An AI-powered smart crop and cultivation recommender that helps you
-                    maximize yield.
+                    Reimagining agriculture through AI - smarter choices, sustainable harvests.
                   </p>
 
                   <div className="d-flex flex-wrap gap-3">
