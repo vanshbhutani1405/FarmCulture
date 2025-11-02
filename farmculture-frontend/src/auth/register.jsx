@@ -15,9 +15,13 @@ const Register = () => {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    contact: "",
+    location: "",
+    farmingType: "",
     password: "",
     confirm: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -28,9 +32,12 @@ const Register = () => {
       await setDoc(doc(db, "users", uid), {
         name: payload.name || "",
         email: payload.email || "",
+        contact: payload.contact || "",
+        location: payload.location || "",
+        farmingType: payload.farmingType || "",
         createdAt: serverTimestamp(),
       });
-      console.log("✅ User saved to Firestore");
+      console.log("✅ User saved in Firestore");
     } catch (error) {
       console.error("🔥 Firestore Error:", error.message);
       toast.error("Failed to save user to database: " + error.message);
@@ -42,19 +49,25 @@ const Register = () => {
     if (form.password !== form.confirm) {
       return toast.error("Passwords do not match");
     }
+    if (form.contact.length !== 10 || isNaN(form.contact)) {
+      return toast.error("Contact number must be a valid 10-digit number");
+    }
 
     try {
       setBusy(true);
-      const { email, password, name } = form;
+      const { name, email, password, contact, location, farmingType } = form;
 
-      // ✅ Auth
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
 
-      // ✅ Firestore
-      await createUserDoc(cred.user.uid, { name, email });
+      await createUserDoc(cred.user.uid, {
+        name,
+        email,
+        contact,
+        location,
+        farmingType,
+      });
 
-      // ✅ Session Storage
       sessionStorage.setItem("isLogin", "true");
       sessionStorage.setItem("uid", cred.user.uid);
       sessionStorage.setItem("email", email);
@@ -78,6 +91,9 @@ const Register = () => {
       await createUserDoc(cred.user.uid, {
         name: cred.user.displayName,
         email: cred.user.email,
+        contact: "",
+        location: "",
+        farmingType: "",
       });
 
       sessionStorage.setItem("isLogin", "true");
@@ -124,7 +140,7 @@ const Register = () => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Name"
+                  placeholder="Full Name"
                   name="name"
                   value={form.name}
                   onChange={onChange}
@@ -144,6 +160,44 @@ const Register = () => {
                 />
               </div>
 
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Mobile Number (10 digits)"
+                  name="contact"
+                  value={form.contact}
+                  onChange={onChange}
+                  required
+                  maxLength="10"
+                />
+              </div>
+
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Location (City / District)"
+                  name="location"
+                  value={form.location}
+                  onChange={onChange}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Farming Type (Organic, Traditional, etc.)"
+                  name="farmingType"
+                  value={form.farmingType}
+                  onChange={onChange}
+                  required
+                />
+              </div>
+
+              {/* Password fields */}
               <div className="mb-3">
                 <div className="input-group">
                   <input

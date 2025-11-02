@@ -122,7 +122,7 @@ const handleSubmit = async (e) => {
                     <Spinner size="sm" animation="border" className="me-2" /> Saving...
                   </>
                 ) : (
-                  "Save Data"
+                  "Get Report"
                 )}
               </button>
             </div>

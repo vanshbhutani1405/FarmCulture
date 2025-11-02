@@ -7,6 +7,44 @@ import tractor from "../assets/farm.jpg"; // 3D tractor image
 const Home = () => {
   const navigate = useNavigate();
 
+  // Check if logged in via sessionStorage
+  const isLoggedIn = sessionStorage.getItem("isLogin") === "true";
+
+  // Logout handler with SweetAlert
+  const handleLogout = () => {
+    window.Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out of your account.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#198754",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, logout",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        sessionStorage.clear();
+        window.Swal.fire("Logged Out!", "You have been logged out successfully.", "success");
+        navigate("/");
+      }
+    });
+  };
+
+  // Handle recommendation click based on auth status
+  const handleRecommendationClick = () => {
+    if (isLoggedIn) {
+      navigate("/form");
+    } else {
+      window.Swal.fire({
+        title: "Login Required!",
+        text: "Please login to get personalized farm recommendations.",
+        icon: "info",
+        confirmButtonColor: "#198754",
+      }).then(() => {
+        navigate("/login");
+      });
+    }
+  };
+
   return (
     <div className="min-vh-100 d-flex flex-column bg-light">
       {/* Top Navbar */}
@@ -21,25 +59,46 @@ const Home = () => {
           </Navbar.Brand>
 
           <Nav className="ms-auto align-items-center">
-            <Button
-              variant="link"
-              className="text-dark me-2 fw-semibold text-decoration-none"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </Button>
-            <Button
-              variant="outline-success"
-              className="fw-semibold px-4 rounded-pill"
-              onClick={() => navigate("/register")}
-            >
-              Register
-            </Button>
+            {!isLoggedIn ? (
+              <>
+                <Button
+                  variant="link"
+                  className="text-dark me-2 fw-semibold text-decoration-none"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="outline-success"
+                  className="fw-semibold px-4 rounded-pill"
+                  onClick={() => navigate("/register")}
+                >
+                  Register
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="link"
+                  className="text-dark me-2 fw-semibold text-decoration-none"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  className="fw-semibold px-4 rounded-pill"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            )}
           </Nav>
         </Container>
       </Navbar>
 
-      {/* Hero Card */}
+      {/* Hero Section */}
       <section className="flex-grow-1 py-4 py-md-5">
         <Container className="py-2 py-md-4">
           <div className="bg-white shadow rounded-4 p-4 p-md-5">
@@ -52,25 +111,27 @@ const Home = () => {
                     Companion
                   </h1>
                   <p className="text-secondary fs-5 mb-4">
-                    Reimagining agriculture through AI - smarter choices, sustainable harvests.
+                    Reimagining agriculture through AI — smarter choices, sustainable harvests.
                   </p>
 
                   <div className="d-flex flex-wrap gap-3">
                     <Button
                       variant="success"
                       className="fw-semibold px-4 py-2 rounded-pill"
-                      onClick={() => navigate("/form")}
+                      onClick={handleRecommendationClick}
                     >
                       Get Recommendation
                     </Button>
 
-                    <Button
-                      variant="outline-success"
-                      className="fw-semibold px-4 py-2 rounded-pill"
-                      onClick={() => navigate("/dashboard")}
-                    >
-                      Go to Dashboard
-                    </Button>
+                    {isLoggedIn && (
+                      <Button
+                        variant="outline-success"
+                        className="fw-semibold px-4 py-2 rounded-pill"
+                        onClick={() => navigate("/dashboard")}
+                      >
+                        Go to Dashboard
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Col>
